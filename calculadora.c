@@ -1,7 +1,7 @@
 /**********************************
-* Nome dos(as) estudantes: [Seu Nome]
+* Nome dos(as) estudantes: Gustavo Henrique Florentin Pires Pereira
 * Trabalho 2
-* Professor: Nome do professor: [Professor Higa]
+* Professor: Nome do professor: Marco Aurélio
 *********************************/
 
 #include <stdio.h>

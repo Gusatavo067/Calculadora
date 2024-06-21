@@ -1,70 +1,64 @@
-/**********************************
-* Nome dos(as) estudantes: Gustavo Henrique Florentin Pires Pereira
-* Trabalho 2
-* Professor: Nome do professor: Marco Aurélio
-*********************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct Node {
-    int data;
-    struct Node* next;
-} Node;
+typedef struct No {
+    int dado;
+    struct No* proximo;
+} No;
 
-typedef struct {
-    Node* head;
-    Node* tail;
+typedef struct BigInt{
+    No* cabeca;
+    No* cauda;
 } BigInt;
 
 // Função para criar um novo nó
-Node* createNode(int data) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->data = data;
-    newNode->next = NULL;
-    return newNode;
+No* criarNo(int dado) {
+    No* novoNo = (No*)malloc(sizeof(No));
+    novoNo->dado = dado;
+    novoNo->proximo = NULL;
+    return novoNo;
 }
 
 // Função para inicializar um BigInt
-void initBigInt(BigInt* num) {
-    num->head = NULL;
-    num->tail = NULL;
+void inicializarBigInt(BigInt* num) {
+    num->cabeca = NULL;
+    num->cauda = NULL;
 }
 
 // Função para adicionar um dígito ao BigInt
-void appendBigInt(BigInt* num, int digit) {
-    Node* newNode = createNode(digit);
-    if (num->head == NULL) {
-        num->head = newNode;
-        num->tail = newNode;
+void adicionarDigito(BigInt* num, int digito) {
+    No* novoNo = criarNo(digito);
+    if (num->cabeca == NULL) {
+        num->cabeca = novoNo;
+        num->cauda = novoNo;
     } else {
-        num->tail->next = newNode;
-        num->tail = newNode;
+        num->cauda->proximo = novoNo;
+        num->cauda = novoNo;
     }
 }
 
 // Função para criar um BigInt a partir de uma string
-BigInt createBigInt(char* str) {
+BigInt criarBigInt(char* str) {
     BigInt num;
-    initBigInt(&num);
+    inicializarBigInt(&num);
     int len = strlen(str);
     for (int i = len - 1; i >= 0; i--) {
-        appendBigInt(&num, str[i] - '0');
+        adicionarDigito(&num, str[i] - '0');
     }
     return num;
 }
 
 // Função para imprimir um BigInt
-void printBigInt(BigInt num) {
-    Node* current = num.head;
+void imprimirBigInt(BigInt num) {
+    No* atual = num.cabeca;
     char* str = (char*)malloc(1000 * sizeof(char));
-    int index = 0;
-    while (current != NULL) {
-        str[index++] = '0' + current->data;
-        current = current->next;
+    int indice = 0;
+    while (atual != NULL) {
+        str[indice++] = '0' + atual->dado;
+        atual = atual->proximo;
     }
-    for (int i = index - 1; i >= 0; i--) {
+    for (int i = indice - 1; i >= 0; i--) {
         printf("%c", str[i]);
     }
     printf("\n");
@@ -72,131 +66,201 @@ void printBigInt(BigInt num) {
 }
 
 // Função para adicionar dois BigInts
-BigInt addBigInt(BigInt a, BigInt b) {
-    BigInt result;
-    initBigInt(&result);
-    Node* p1 = a.head;
-    Node* p2 = b.head;
+BigInt adicionarBigInt(BigInt a, BigInt b) {
+    BigInt resultado;
+    inicializarBigInt(&resultado);
+    No* p1 = a.cabeca;
+    No* p2 = b.cabeca;
     int carry = 0;
     while (p1 != NULL || p2 != NULL || carry) {
-        int sum = carry;
+        int soma = carry;
         if (p1 != NULL) {
-            sum += p1->data;
-            p1 = p1->next;
+            soma += p1->dado;
+            p1 = p1->proximo;
         }
         if (p2 != NULL) {
-            sum += p2->data;
-            p2 = p2->next;
+            soma += p2->dado;
+            p2 = p2->proximo;
         }
-        appendBigInt(&result, sum % 10);
-        carry = sum / 10;
+        adicionarDigito(&resultado, soma % 10);
+        carry = soma / 10;
     }
-    return result;
+    return resultado;
 }
 
 // Função para subtrair dois BigInts
-BigInt subtractBigInt(BigInt a, BigInt b) {
-    BigInt result;
-    initBigInt(&result);
-    Node* p1 = a.head;
-    Node* p2 = b.head;
-    int borrow = 0;
+BigInt subtrairBigInt(BigInt a, BigInt b) {
+    BigInt resultado;
+    inicializarBigInt(&resultado);
+    No* p1 = a.cabeca;
+    No* p2 = b.cabeca;
+    int emprestimo = 0;
     while (p1 != NULL) {
-        int sub = p1->data - (p2 ? p2->data : 0) - borrow;
+        int sub = p1->dado - (p2 ? p2->dado : 0) - emprestimo;
         if (sub < 0) {
             sub += 10;
-            borrow = 1;
+            emprestimo = 1;
         } else {
-            borrow = 0;
+            emprestimo = 0;
         }
-        appendBigInt(&result, sub);
-        p1 = p1->next;
-        if (p2) p2 = p2->next;
+        adicionarDigito(&resultado, sub);
+        p1 = p1->proximo;
+        if (p2) p2 = p2->proximo;
     }
-    return result;
-}
-
-// Função para multiplicar dois BigInts
-BigInt multiplyBigInt(BigInt a, BigInt b) {
-    BigInt result;
-    initBigInt(&result);
-    Node* p1 = a.head;
-    Node* p2;
-    int shift = 0;
-
-    while (p1 != NULL) {
-        BigInt temp;
-        initBigInt(&temp);
-        for (int i = 0; i < shift; i++) {
-            appendBigInt(&temp, 0);
+    // Remover zeros à esquerda no resultado
+    while (resultado.cauda != NULL && resultado.cauda->dado == 0) {
+        No* temp = resultado.cauda;
+        if (resultado.cauda == resultado.cabeca) {
+            resultado.cabeca = resultado.cauda = NULL;
+        } else {
+            No* atual = resultado.cabeca;
+            while (atual->proximo != resultado.cauda) {
+                atual = atual->proximo;
+            }
+            atual->proximo = NULL;
+            resultado.cauda = atual;
         }
-        int carry = 0;
-        p2 = b.head;
-        while (p2 != NULL || carry) {
-            int mul = carry + (p2 ? p2->data : 0) * p1->data;
-            appendBigInt(&temp, mul % 10);
-            carry = mul / 10;
-            if (p2) p2 = p2->next;
-        }
-        result = addBigInt(result, temp);
-        p1 = p1->next;
-        shift++;
+        free(temp);
     }
-    return result;
+    return resultado;
 }
 
 // Função para comparar dois BigInts
-int compareBigInt(BigInt a, BigInt b) {
-    Node* p1 = a.head;
-    Node* p2 = b.head;
+int compararBigInt(BigInt a, BigInt b) {
+    // Conta o número de dígitos de cada BigInt
     int len1 = 0, len2 = 0;
-    
-    // Calcular o tamanho dos dois BigInts
-    while (p1 != NULL) {
+    No* p1 = a.cabeca;
+    No* p2 = b.cabeca;
+    while (p1) {
         len1++;
-        p1 = p1->next;
+        p1 = p1->proximo;
     }
-    while (p2 != NULL) {
+    while (p2) {
         len2++;
-        p2 = p2->next;
+        p2 = p2->proximo;
     }
-    
-    // Comparar os tamanhos
+
+    // Se um número tem mais dígitos, ele é maior
     if (len1 > len2) return 1;
-    if (len2 > len1) return -1;
-    
-    // Se os tamanhos são iguais, comparar os dígitos
-    p1 = a.head;
-    p2 = b.head;
-    while (p1 != NULL) {
-        if (p1->data > p2->data) return 1;
-        if (p1->data < p2->data) return -1;
-        p1 = p1->next;
-        p2 = p2->next;
+    if (len1 < len2) return -1;
+
+    // Se o número de dígitos é igual, compara os dígitos do mais significativo ao menos significativo
+    p1 = a.cabeca;
+    p2 = b.cabeca;
+    int* digitos1 = (int*)malloc(len1 * sizeof(int));
+    int* digitos2 = (int*)malloc(len2 * sizeof(int));
+    for (int i = 0; i < len1; i++) {
+        digitos1[i] = p1->dado;
+        p1 = p1->proximo;
     }
+    for (int i = 0; i < len2; i++) {
+        digitos2[i] = p2->dado;
+        p2 = p2->proximo;
+    }
+    for (int i = len1 - 1; i >= 0; i--) {
+        if (digitos1[i] > digitos2[i]) {
+            free(digitos1);
+            free(digitos2);
+            return 1;
+        }
+        if (digitos1[i] < digitos2[i]) {
+            free(digitos1);
+            free(digitos2);
+            return -1;
+        }
+    }
+
+    free(digitos1);
+    free(digitos2);
     return 0;
 }
+// Função para multiplicar dois BigInts
+BigInt multiplicarBigInt(BigInt a, BigInt b) {
+    BigInt resultado;
+    inicializarBigInt(&resultado);
+    No* p1 = a.cabeca;
+    No* p2;
+    int deslocamento = 0;
 
-// Função para dividir dois BigInts
-BigInt divideBigInt(BigInt a, BigInt b) {
-    BigInt result;
-    initBigInt(&result);
-    BigInt current;
-    initBigInt(&current);
-    Node* p = a.head;
-    while (p != NULL) {
-        appendBigInt(&current, p->data);
-        p = p->next;
-        int count = 0;
-        while (compareBigInt(current, b) >= 0) {
-            current = subtractBigInt(current, b);
-            count++;
+    while (p1 != NULL) {
+        BigInt temp;
+        inicializarBigInt(&temp);
+        for (int i = 0; i < deslocamento; i++) {
+            adicionarDigito(&temp, 0);
         }
-        appendBigInt(&result, count);
+        int carry = 0;
+        p2 = b.cabeca;
+        while (p2 != NULL || carry) {
+            int mul = carry + (p2 ? p2->dado : 0) * p1->dado;
+            adicionarDigito(&temp, mul % 10);
+            carry = mul / 10;
+            if (p2) p2 = p2->proximo;
+        }
+        resultado = adicionarBigInt(resultado, temp);
+        p1 = p1->proximo;
+        deslocamento++;
     }
-    return result;
+    return resultado;
 }
 
+
+// Função para copiar um BigInt
+BigInt copiarBigInt(BigInt num) {
+    BigInt resultado;
+    inicializarBigInt(&resultado);
+    No* atual = num.cabeca;
+    while (atual != NULL) {
+        adicionarDigito(&resultado, atual->dado);
+        atual = atual->proximo;
+    }
+    return resultado;
+}
+
+void dividirBigInt(BigInt a, BigInt b, BigInt* quociente, BigInt* resto) {
+    inicializarBigInt(quociente);
+    inicializarBigInt(resto);
+    No* p = a.cabeca;
+    while (p != NULL) {
+        adicionarDigito(resto, p->dado);
+        // Remove zeros à esquerda do resto
+        while (resto->cauda != NULL && resto->cauda->dado == 0) {
+            No* temp = resto->cauda;
+            if (resto->cauda == resto->cabeca) {
+                resto->cabeca = resto->cauda = NULL;
+            } else {
+                No* atual = resto->cabeca;
+                while (atual->proximo != resto->cauda) {
+                    atual = atual->proximo;
+                }
+                atual->proximo = NULL;
+                resto->cauda = atual;
+            }
+            free(temp);
+        }
+        p = p->proximo;
+        int count = 0;
+        while (compararBigInt(*resto, b) >= 0) {
+            *resto = subtrairBigInt(*resto, b);
+            count++;
+        }
+        adicionarDigito(quociente, count);
+        // Corrigir zeros à esquerda no quociente
+        while (quociente->cauda != NULL && quociente->cauda->dado == 0) {
+            No* temp = quociente->cauda;
+            if (quociente->cauda == quociente->cabeca) {
+                quociente->cabeca = quociente->cauda = NULL;
+            } else {
+                No* atual = quociente->cabeca;
+                while (atual->proximo != quociente->cauda) {
+                    atual = atual->proximo;
+                }
+                atual->proximo = NULL;
+                quociente->cauda = atual;
+            }
+            free(temp);
+        }
+    }
+}
 int main() {
     int N;
     scanf("%d", &N);
@@ -209,25 +273,32 @@ int main() {
         scanf("%s", num2);
         getchar(); // Para consumir a linha em branco
         scanf(" %c", &op);
-        
-        BigInt a = createBigInt(num1);
-        BigInt b = createBigInt(num2);
-        BigInt result;
+
+        BigInt a = criarBigInt(num1);
+        BigInt b = criarBigInt(num2);
+        BigInt resultado, resto;
         switch (op) {
             case '+':
-                result = addBigInt(a, b);
+                resultado = adicionarBigInt(a, b);
+                imprimirBigInt(resultado);
                 break;
             case '-':
-                result = subtractBigInt(a, b);
+                resultado = subtrairBigInt(a, b);
+                imprimirBigInt(resultado);
                 break;
             case '*':
-                result = multiplyBigInt(a, b);
+                resultado = multiplicarBigInt(a, b);
+                imprimirBigInt(resultado);
                 break;
             case '/':
-                result = divideBigInt(a, b);
+                if (compararBigInt(b, criarBigInt("0")) == 0) {
+                    printf("Erro: Divisão por zero.\n");
+                } else {
+                    dividirBigInt(a, b, &resultado, &resto);
+                    imprimirBigInt(resultado);
+                }
                 break;
         }
-        printBigInt(result);
     }
 
     return 0;

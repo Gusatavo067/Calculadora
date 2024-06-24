@@ -219,48 +219,58 @@ BigInt copiarBigInt(BigInt num) {
 void dividirBigInt(BigInt a, BigInt b, BigInt* quociente, BigInt* resto) {
     inicializarBigInt(quociente);
     inicializarBigInt(resto);
-    No* p = a.cabeca;
-    while (p != NULL) {
-        adicionarDigito(resto, p->dado);
-        // Remove zeros à esquerda do resto
-        while (resto->cauda != NULL && resto->cauda->dado == 0) {
-            No* temp = resto->cauda;
-            if (resto->cauda == resto->cabeca) {
-                resto->cabeca = resto->cauda = NULL;
-            } else {
-                No* atual = resto->cabeca;
-                while (atual->proximo != resto->cauda) {
-                    atual = atual->proximo;
-                }
-                atual->proximo = NULL;
-                resto->cauda = atual;
-            }
-            free(temp);
-        }
-        p = p->proximo;
+
+    // Copiar o valor inicial do dividendo (a) para o resto
+    No* atual = a.cabeca;
+    while (atual != NULL) {
+        adicionarDigito(resto, atual->dado);
+        atual = atual->proximo;
+    }
+
+    // Inicializar um BigInt temporário para armazenar o divisor original (b)
+    BigInt tempB;
+    inicializarBigInt(&tempB);
+    atual = b.cabeca;
+    while (atual != NULL) {
+        adicionarDigito(&tempB, atual->dado);
+        atual = atual->proximo;
+    }
+
+    // Loop principal para a divisão
+    while (compararBigInt(*resto, tempB) >= 0) {
         int count = 0;
-        while (compararBigInt(*resto, b) >= 0) {
-            *resto = subtrairBigInt(*resto, b);
+        while (compararBigInt(*resto, tempB) >= 0) {
+            *resto = subtrairBigInt(*resto, tempB);
             count++;
         }
         adicionarDigito(quociente, count);
-        // Corrigir zeros à esquerda no quociente
-        while (quociente->cauda != NULL && quociente->cauda->dado == 0) {
-            No* temp = quociente->cauda;
-            if (quociente->cauda == quociente->cabeca) {
-                quociente->cabeca = quociente->cauda = NULL;
-            } else {
-                No* atual = quociente->cabeca;
-                while (atual->proximo != quociente->cauda) {
-                    atual = atual->proximo;
-                }
-                atual->proximo = NULL;
-                quociente->cauda = atual;
+    }
+
+    // Limpar zeros à esquerda no quociente, se houver
+    while (quociente->cauda != NULL && quociente->cauda->dado == 0) {
+        No* temp = quociente->cauda;
+        if (quociente->cauda == quociente->cabeca) {
+            quociente->cabeca = quociente->cauda = NULL;
+        } else {
+            No* atual = quociente->cabeca;
+            while (atual->proximo != quociente->cauda) {
+                atual = atual->proximo;
             }
-            free(temp);
+            atual->proximo = NULL;
+            quociente->cauda = atual;
         }
+        free(temp);
+    }
+
+    // Liberar memória utilizada pelo BigInt temporário para o divisor (tempB)
+    No* tempNode = tempB.cabeca;
+    while (tempNode != NULL) {
+        No* temp = tempNode;
+        tempNode = tempNode->proximo;
+        free(temp);
     }
 }
+
 int main() {
     int N;
     scanf("%d", &N);
